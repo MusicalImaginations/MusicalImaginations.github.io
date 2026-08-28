@@ -164,8 +164,43 @@ input[type=range]::-moz-range-thumb{width:10px;height:10px;border:2px solid var(
 .notification-popover.open{display:block}
 .notification-popover h2{margin:0 0 14px;font-size:18px}
 .empty{color:var(--muted);padding:25px;text-align:center}
-@media(max-width:1000px){.app{grid-template-columns:210px 1fr}.right{display:none}.volume{width:150px}}
-@media(max-width:700px){.app{grid-template-columns:1fr;grid-template-rows:1fr 88px}.left{display:none}.player-left{width:150px}.volume{display:none}}
+@media(max-width:1100px){.app{grid-template-columns:210px 1fr}.right{display:none}.volume{width:150px}}
+@media(max-width:700px){
+  body{overflow:hidden}
+  .app{height:100dvh;min-height:0;padding:6px;grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) auto;gap:6px}
+  .left,.right{display:none}
+  .center{padding:12px;min-width:0}
+  .topbar{margin:-12px -12px 18px;padding:12px;gap:8px;flex-wrap:wrap}
+  .search-wrap{order:1;flex-basis:100%;max-width:none}
+  .actions{order:2;width:100%;justify-content:flex-end}
+  .hero{padding-top:0}
+  .hero h1{font-size:25px}
+  .grid{grid-template-columns:repeat(auto-fill,minmax(122px,1fr));gap:9px}
+  h2{font-size:19px;margin-top:22px}
+  .card{padding:8px}
+  .stats-strip{gap:7px}
+  .stat{flex:1;min-width:120px;padding:9px 10px}
+  .player{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"track effects" "center center";align-items:center;gap:7px 10px;padding:10px}
+  .player-left{grid-area:track;width:auto;min-width:0}
+  .player-left img{width:44px;height:44px}
+  .player-center{grid-area:center;width:100%;max-width:none;gap:6px}
+  .controls{gap:9px}
+  .ctrl{width:28px;height:28px}
+  .play{width:36px;height:36px}
+  .audio-effects{grid-area:effects;gap:5px}
+  .pitch-control,.pitch-reset{display:none}
+  .volume{display:none}
+  .speed-select{padding-left:6px;padding-right:18px}
+}
+@media(max-width:380px){
+  .center{padding:10px}
+  .topbar{margin:-10px -10px 16px;padding:10px}
+  .icon{width:36px;height:36px}
+  .grid{grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:7px}
+  .card-title{font-size:13px}
+  .controls{gap:4px}
+  .player{padding:8px}
+}
 </style>
 </head>
 <body>
