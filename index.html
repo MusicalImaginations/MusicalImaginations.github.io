@@ -203,15 +203,20 @@ input[type=range]::-moz-range-thumb{width:10px;height:10px;border:2px solid var(
   .controls{gap:4px}
   .player{padding:8px}
 }
-.artist-play{width:30px;height:30px;border:0;border-radius:50%;background:var(--accent);color:#000;font-size:12px;cursor:pointer;display:grid;place-items:center;flex:none;opacity:0;transition:.2s}.artist-card:hover .artist-play{opacity:1}.artist-play:hover{background:var(--accent-2);transform:scale(1.08)}
-.add-to-pl{position:absolute;right:17px;top:calc(100% - 124px);width:30px;height:30px;border-radius:50%;border:0;background:rgba(0,0,0,.55);color:var(--text);font-size:17px;cursor:pointer;display:grid;place-items:center;opacity:0;transform:translateY(7px);transition:.2s;z-index:2}.card:hover .add-to-pl{opacity:1;transform:none}.add-to-pl:hover{background:var(--accent);color:#000}
-.atp-list{display:flex;flex-direction:column;gap:4px;max-height:340px;overflow:auto}.atp-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;background:var(--panel2);border:1px solid transparent;cursor:pointer;text-align:left;width:100%;font-size:13px;color:var(--text)}.atp-item:hover{border-color:var(--accent);background:rgba(255,255,255,.08)}.atp-item .atp-count{color:var(--muted);font-size:11px;margin-left:auto;white-space:nowrap}.atp-create{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;border:1px dashed var(--line);background:transparent;color:var(--muted);cursor:pointer;width:100%;text-align:left;font-size:13px}.atp-create:hover{color:var(--accent);border-color:var(--accent)}
-.btn.danger{background:#d94545;color:#fff}.btn.danger:hover{background:#c53838}
-.remove-from-pl{color:var(--muted);font-size:18px;cursor:pointer;border:0;background:transparent;padding:4px 8px;border-radius:5px;line-height:1;flex:none}.remove-from-pl:hover{color:#e74c3c;background:rgba(231,76,60,.12)}
-.song-add-pl{color:var(--muted);font-size:17px;cursor:pointer;border:0;background:transparent;padding:4px 8px;border-radius:5px;line-height:1;flex:none;display:grid;place-items:center}.song-add-pl:hover{color:var(--accent);background:var(--panel2)}
-.playlist-song>.song-add-pl{margin-left:auto}.playlist-song>.playlist-song-action{width:22px;flex:none;text-align:center}.playlist-song>.remove-from-pl{margin-left:0}
-.add-songs-list{display:flex;flex-direction:column;gap:4px;max-height:400px;overflow:auto}.add-songs-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:7px;cursor:pointer;text-align:left;border:1px solid transparent;width:100%;background:transparent;color:var(--text)}.add-songs-item:hover{background:var(--panel2);border-color:var(--line)}.add-songs-item.in-pl{opacity:.4;cursor:default}.add-songs-item img{width:36px;height:36px;border-radius:5px;object-fit:cover;flex:none}.add-songs-item .asi-info{flex:1;min-width:0}.add-songs-item .asi-info b,.add-songs-item .asi-info span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.add-songs-item .asi-info b{font-size:12px}.add-songs-item .asi-info span{color:var(--muted);font-size:11px;margin-top:2px}.add-songs-item .asi-check{font-size:16px;color:var(--accent);flex:none;width:20px;text-align:center}
-.toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--panel);border:1px solid var(--accent);border-radius:8px;padding:10px 18px;font-size:13px;z-index:50;opacity:0;transition:.3s;backdrop-filter:blur(20px);box-shadow:0 8px 30px rgba(0,0,0,.3);pointer-events:none}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+/* ---------- Mobile drawer: sidebar slides in on phones ---------- */
+.menu-btn{display:none}
+.drawer-scrim{display:none}
+@media(max-width:700px){
+  .menu-btn{display:grid;flex:none}
+  .left{display:flex;position:fixed;left:0;top:0;bottom:0;width:min(80vw,300px);z-index:40;border-radius:0 14px 14px 0;transform:translateX(-110%);transition:transform .25s ease}
+  .left.open{transform:none;box-shadow:24px 0 60px rgba(0,0,0,.5)}
+  .drawer-scrim{display:block;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:39;opacity:0;pointer-events:none;transition:opacity .25s ease}
+  .drawer-scrim.open{opacity:1;pointer-events:auto}
+  .topbar{flex-wrap:nowrap}
+  .search-wrap{order:0;flex-basis:auto;flex:1}
+  .actions{order:0;width:auto}
+  .actions .icon{width:36px;height:36px}
+}
 </style>
 </head>
 <body>
@@ -347,9 +352,6 @@ input[type=range]::-moz-range-thumb{width:10px;height:10px;border:2px solid var(
  </div>
 </div>
 
-<div class="modal" id="addToPlaylistModal"><div class="modal-box"><h2>Add to playlist</h2><div class="atp-list" id="atpList"></div><div class="modal-actions"><button class="btn secondary" id="closeAddToPlaylist">Close</button></div></div></div>
-<div class="modal" id="addSongsModal"><div class="modal-box playlist-modal-box"><div class="playlist-modal-heading"><h2>Add songs</h2><span class="playlist-modal-count" id="addSongsCount"></span></div><div class="add-songs-list" id="addSongsList"></div><div class="modal-actions"><button class="btn secondary" id="closeAddSongs">Done</button></div></div></div>
-<div class="toast" id="toast"></div>
 <input id="fileInput" type="file" accept="audio/*" multiple hidden>
 <audio id="audio"></audio>
 
@@ -358,7 +360,7 @@ const $=id=>document.getElementById(id);
 const audio=$('audio');
 let songs=[];
 let current=-1;
-let repeat=false,shuffle=false,shuffleHistory=[];
+let repeat=false,shuffle=false;
 let playbackToken=0;
 let playbackList=null;
 let listenedSeconds=Number(localStorage.getItem('mi_listened_seconds')||0);
@@ -576,36 +578,10 @@ function updateQueue(){
  const list=songs.slice(current+1).concat(songs.slice(0,Math.max(current,0)));
  $('queue').innerHTML=list.slice(0,8).map(s=>`<div class="queue-item"><img src="${art(s)}"><div><b>${esc(s.name)}</b><span>${esc(s.artist)}</span></div></div>`).join('');
 }
-function pickShuffleIndex(){
- const list=playbackList&&playbackList.length?playbackList:songs;
- if(!list.length)return current;
- if(list.length===1)return songs.indexOf(list[0]);
- const available=[];
- for(let i=0;i<list.length;i++){
-  const idx=songs.indexOf(list[i]);
-  if(idx>=0&&idx!==current&&!shuffleHistory.includes(idx))available.push(idx);
- }
- if(available.length){
-  return available[Math.floor(Math.random()*available.length)];
- }
- const all=[];
- for(let i=0;i<list.length;i++){
-  const idx=songs.indexOf(list[i]);
-  if(idx>=0&&idx!==current)all.push(idx);
- }
- if(all.length)return all[Math.floor(Math.random()*all.length)];
- return songs.indexOf(list[0]);
-}
 function nextSong(){
  const list=playbackList?.length?playbackList:songs;
  if(!list.length)return;
- if(shuffle){
-  if(list.length>1){
-   if(current>=0){shuffleHistory.push(current);if(shuffleHistory.length>Math.min(list.length-1,12))shuffleHistory.shift()}
-   playSong(pickShuffleIndex());
-  }else{playSong(songs.indexOf(list[0]))}
-  return;
- }
+ if(shuffle){let next=songs.indexOf(list[0]);if(list.length>1)while(next===current)next=songs.indexOf(list[Math.floor(Math.random()*list.length)]);playSong(next);return}
  const position=list.indexOf(songs[current]);
  playSong(songs.indexOf(list[(position+1)%list.length]));
 }
@@ -626,21 +602,7 @@ $('insightTabs').querySelectorAll('.insight-tab').forEach(button=>button.onclick
 $('playBtn').onclick=()=>{if(current<0){if(songs.length)playSong(0);return}audio.paused?(audio.play(),$('playBtn').textContent='❚❚'):(audio.pause(),$('playBtn').textContent='▶')};
 $('next').onclick=nextSong;$('prev').onclick=prevSong;
 $('repeat').onclick=()=>{repeat=!repeat;$('repeat').style.color=repeat?'var(--accent)':'inherit'};
-$('shuffle').onclick=()=>{
- shuffle=!shuffle;
- $('shuffle').style.color=shuffle?'var(--accent)':'inherit';
- if(shuffle){
-  shuffleHistory=[];
-  if(songs.length){
-   const list=playbackList&&playbackList.length?playbackList:songs;
-   let start=songs.indexOf(list[Math.floor(Math.random()*list.length)]);
-   if(start<0)start=0;
-   playSong(start);
-  }
- }else{
-  shuffleHistory=[];
- }
-};
+$('shuffle').onclick=()=>{shuffle=!shuffle;$('shuffle').style.color=shuffle?'var(--accent)':'inherit'};
 audio.ontimeupdate=()=>{let p=audio.duration?(audio.currentTime/audio.duration)*100:0;const now=performance.now();if(!audio.paused&&lastPlaybackTick){const elapsed=(now-lastPlaybackTick)/1000;listenedSeconds+=elapsed;const artist=songs[current]?.artist;if(artist){const day=new Date().setHours(0,0,0,0);listeningHistory[artist]??={};listeningHistory[artist][day]=(listeningHistory[artist][day]||0)+elapsed;localStorage.setItem('mi_listening_history',JSON.stringify(listeningHistory))}localStorage.setItem('mi_listened_seconds',String(listenedSeconds));renderStats();renderListeningInsights()}lastPlaybackTick=now;$('progressFill').style.width=p+'%';$('currentTime').textContent=fmt(audio.currentTime);$('totalTime').textContent=fmt(audio.duration);$('nowPlayingProgressFill').style.width=p+'%';$('nowPlayingTime').textContent=fmt(audio.currentTime);$('nowPlayingTotal').textContent=fmt(audio.duration)};
 audio.onloadedmetadata=()=>{if(pendingSeekRatio!==null){audio.currentTime=pendingSeekRatio*audio.duration;pendingSeekRatio=null;audio.play()}};
 audio.onended=()=>{if(!Number.isFinite(audio.duration)||audio.duration<=0||audio.currentTime<audio.duration-.25)return;shuffle?nextSong():repeat?playSong(current):nextSong()};
@@ -831,6 +793,7 @@ function guessFromName(fileName){
  const clean=cleanFileName(fileName);
  const parts=clean.split(/\s+-\s+/);
  if(parts.length>1){
+  // "Artist - Title" is the most common export format; "Title - Artist" is what this app used before.
   return {title:parts.slice(1).join(' - ').trim()||clean, artist:parts[0].trim()||'Local Artist', altTitle:parts.slice(0,-1).join(' - '), altArtist:parts.at(-1)};
  }
  return {title:clean||fileName, artist:'Local Artist'};
@@ -936,6 +899,7 @@ audio.addEventListener('error',()=>{
  const song=songs[current];
  if(!song||recovering)return;
  recovering=true;
+ // Re-create the object URL from the stored blob (blob URLs die after a reload).
  if(song.file){
   try{URL.revokeObjectURL(song.url)}catch(e){}
   song.url=URL.createObjectURL(song.file);
@@ -1018,13 +982,111 @@ audio.addEventListener('playing',()=>{failedSongs.clear()});
 /* Keep saved play counts in sync */
 audio.addEventListener('ended',()=>{const song=songs[current];if(song&&song.storedId)dbPut && saveSong(song,song.file)});
 
+/* ---------- Recognize every kind of MP3 (ID3v2.2 / v2.3 / v2.4 / v1 / none) ---------- */
+/* One robust scanner that understands old and new tag layouts. It only fills in
+   fields the original reader didn't already find, so nothing existing changes. */
+function scanId3Any(buffer){
+ const bytes=new Uint8Array(buffer);
+ if(bytes.length<10||readText(bytes,0,3)!=='ID3')return null;
+ const version=bytes[3], flags=bytes[5];
+ let tagSize=(bytes[6]<<21)|(bytes[7]<<14)|(bytes[8]<<7)|bytes[9];
+ let data=bytes.slice(10,Math.min(bytes.length,10+tagSize));
+ /* remove unsynchronisation bytes (0x00 after 0xFF) if the tag says they're present */
+ if(flags&0x80){const clean=[];for(let i=0;i<data.length;i++){clean.push(data[i]);if(data[i]===0xFF&&data[i+1]===0x00)i++}data=new Uint8Array(clean)}
+ const out={};
+ const decText=(frame,long)=>{
+  const enc=frame[0];
+  const decoder=enc===1?'utf-16le':enc===2?'utf-16be':enc===3?'utf-8':'windows-1252';
+  return new TextDecoder(decoder).decode(frame.slice(1)).replace(/[\0].*$/,'').trim()||null;
+ };
+ const setText=(id,value)=>{if(!value)return;
+  if(id==='TIT2'||id==='TT2')out.title=out.title||value;
+  else if(id==='TPE1'||id==='TP1')out.artist=out.artist||value;
+  else if(id==='TALB'||id==='TAL')out.album=out.album||value;};
+ const setPic=(frame,v2)=>{
+  try{
+   let cursor=1;
+   if(v2){const fmt=readText(frame,1,4);cursor=4;var mime=fmt==='PNG'?'image/png':'image/jpeg'}
+   else{let e=1;while(e<frame.length&&frame[e]!==0)e++;var mime=readText(frame,1,e)||'image/jpeg';cursor=e+1}
+   cursor+=1; /* picture type */
+   const enc=frame[0];
+   if(enc===1||enc===2){while(cursor+1<frame.length&&(frame[cursor]!==0||frame[cursor+1]!==0))cursor+=2;cursor+=2}
+   else{while(cursor<frame.length&&frame[cursor]!==0)cursor++;cursor+=1}
+   if(cursor<frame.length)out.art=out.art||new Blob([frame.slice(cursor)],{type:mime});
+  }catch(e){}
+ };
+ let offset=0;
+ /* skip an extended header if present (v2.3: u32 size; v2.4: syncsafe size) */
+ if(flags&0x40&&data.length>4){
+  const sz=version>=4?((data[0]<<21)|(data[1]<<14)|(data[2]<<7)|data[3]):((data[0]<<24)>>>0|(data[1]<<16)|(data[2]<<8)|data[3]);
+  offset=version>=4?sz:sz+4;
+ }
+ if(version===2){
+  while(offset+6<=data.length){
+   const id=readText(data,offset,offset+3);
+   const size=(data[offset+3]<<16)|(data[offset+4]<<8)|data[offset+5];
+   if(!id.trim()||!size||offset+6+size>data.length)break;
+   const frame=data.slice(offset+6,offset+6+size);
+   if(id==='PIC')setPic(frame,true);else setText(id,decText(frame));
+   offset+=6+size;
+  }
+ }else{
+  while(offset+10<=data.length){
+   const id=readText(data,offset,offset+4);
+   let size=version>=4?((data[offset+4]<<21)|(data[offset+5]<<14)|(data[offset+6]<<7)|data[offset+7]):(((data[offset+4]<<24)>>>0)|(data[offset+5]<<16)|(data[offset+6]<<8)|data[offset+7]);
+   if(!id.trim()||!size||offset+10+size>data.length)break;
+   const frame=data.slice(offset+10,offset+10+size);
+   if(id==='APIC')setPic(frame,false);else setText(id,decText(frame));
+   offset+=10+size;
+  }
+ }
+ return (out.title||out.artist||out.album||out.art)?out:null;
+}
+const baseReadTags=readTags;
+readTags=async function(blob,fileName){
+ const tags=await baseReadTags(blob,fileName);
+ try{
+  const buffer=await blob.arrayBuffer();
+  const extra=scanId3Any(buffer);
+  if(extra){
+   tags.title=tags.title||extra.title; tags.artist=tags.artist||extra.artist;
+   tags.album=tags.album||extra.album; tags.art=tags.art||extra.art;
+  }
+ }catch(e){}
+ return tags;
+};
+
+/* ---------- Mobile drawer: open the sidebar (nav + playlists) on phones ---------- */
+(function(){
+ const topbar=document.querySelector('.topbar'), left=document.querySelector('.left');
+ if(!topbar||!left)return;
+ const menuBtn=document.createElement('button');
+ menuBtn.className='icon menu-btn';
+ menuBtn.title='Open menu';
+ menuBtn.setAttribute('aria-label','Open menu');
+ menuBtn.innerHTML='<svg class="ui-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>';
+ topbar.insertBefore(menuBtn,topbar.firstChild);
+ const scrim=document.createElement('div');
+ scrim.className='drawer-scrim';
+ document.body.appendChild(scrim);
+ const close=()=>{left.classList.remove('open');scrim.classList.remove('open')};
+ menuBtn.onclick=()=>{left.classList.toggle('open');scrim.classList.toggle('open',left.classList.contains('open'))};
+ scrim.onclick=close;
+ document.addEventListener('keydown',e=>{if(e.key==='Escape')close()});
+ /* close the drawer whenever a nav item or playlist is picked */
+ left.addEventListener('click',e=>{if(e.target.closest('button')&&!e.target.closest('.menu-btn'))close()});
+})();
+
 /* ---------- Startup: show only the user's own uploads, then restore the saved library ---------- */
 const previousOnload=window.onload;
 window.onload=function(){
  if(typeof previousOnload==='function')previousOnload.call(window);
+ // The template ships with a bundled demo playlist (file:null, no storedId).
+ // The user only wants to see songs they uploaded themselves, so drop anything
+ // that didn't come from a real file on this device.
  audio.pause();
  songs=songs.filter(song=>song.file||song.storedId);
- favoriteTrackFiles.length=0;
+ favoriteTrackFiles.length=0; // playlist counters reflect the real library now
  current=-1;
  playbackList=null;
  failedSongs.clear();
@@ -1035,117 +1097,6 @@ window.onload=function(){
 
 /* Expose small helpers for power users */
 window.miLibrary={restore:restoreLibrary,clear:async()=>{await dbClear();songs=songs.filter(song=>!song.storedId);render()},remove:async id=>{await dbDelete(id);songs=songs.filter(song=>song.storedId!==id);render()}};
-})();
-</script>
-<script>
-/* ===== Added: Artist play button + custom playlist management (create/edit/delete/add songs, saved) ===== */
-(function(){
-function songUid(s){return s.storedId?('s:'+s.storedId):('n:'+songKey(s)+'|'+(s.artist||'').toLowerCase().replace(/[^a-z0-9]+/g,''))}
-let customPlaylists=JSON.parse(localStorage.getItem('mi_custom_playlists')||'[]');
-function savePlaylists(){localStorage.setItem('mi_custom_playlists',JSON.stringify(customPlaylists))}
-function playlistSongs(pl){return pl.songs.map(uid=>songs.find(s=>songUid(s)===uid)).filter(Boolean)}
-function renamePlaylist(id,name){const pl=customPlaylists.find(p=>p.id===id);if(pl){pl.name=name;savePlaylists();renderPlaylists()}}
-let toastTimer=null;
-function showToast(text){const t=$('toast');t.textContent=text;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2200)}
-
-renderPlaylists=function(){
- const builtin=[favoritePlaylistName,'Liked Songs','All-Time Top Songs','Top Artists','Offline Mix 01','Late Night Coding','Matchday Warmup'];
- $('playlistList').innerHTML=builtin.map(x=>{let c='';if(x===favoritePlaylistName)c='openPlaylist()';else if(x==='Liked Songs')c='openLikedPlaylist()';return '<button onclick="'+c+'"><svg class="ui-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M8 5h11M8 12h11M8 19h11M4 5h.01M4 12h.01M4 19h.01"/></svg>'+x+'</button>'}).join('')+customPlaylists.map(pl=>'<button onclick="openCustomPlaylistPage(\''+pl.id+'\')" title="'+esc(pl.name)+'"><svg class="ui-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M8 5h11M8 12h11M8 19h11M4 5h.01M4 12h.01M4 19h.01"/></svg>'+esc(pl.name)+'</button>').join('');
- const bc=[favoritePlaylistName,'Offline Mix 01','Late Night Coding','Matchday Warmup'];
- $('playlistCards').innerHTML=bc.map((x,i)=>'<div class="card" onclick="openPlaylist()">'+playlistCover(i)+'<div class="card-title">'+x+'</div><div class="card-sub">'+(x===favoritePlaylistName?favoriteTrackFiles.length:songs.length)+' offline songs</div><button class="play-overlay" title="Play '+x+'" onclick="event.stopPropagation();toggleSong(0)">▶</button></div>').join('')+customPlaylists.map(pl=>{const ps=playlistSongs(pl);const c=ps.slice(0,4);const ch=c.length?'<div class="cover playlist-cover">'+c.map(s=>'<img src="'+art(s)+'" alt="">').join('')+'</div>':'<div class="cover" style="background:linear-gradient(135deg,var(--accent),var(--accent-2));display:grid;place-items:center;opacity:.7"><svg class="ui-icon" style="width:48px;height:48px;opacity:.4" viewBox="0 0 24 24"><path d="M8 5h11M8 12h11M8 19h11M4 5h.01M4 12h.01M4 19h.01"/></svg></div>';return '<div class="card" onclick="openCustomPlaylistPage(\''+pl.id+'\')">'+ch+'<div class="card-title">'+esc(pl.name)+'</div><div class="card-sub">'+ps.length+' '+(ps.length===1?'song':'songs')+'</div><button class="play-overlay" title="Play '+esc(pl.name)+'" onclick="event.stopPropagation();playCustomPlaylist(\''+pl.id+'\',false)">▶</button></div>'}).join('');
-};
-
-let artistNames=[];
-renderTopArtists=function(){
- const artists=new Map();
- songs.forEach(song=>{const e=artists.get(song.artist)||{name:song.artist,count:0,plays:0};e.count++;e.plays+=song.plays;artists.set(song.artist,e)});
- artistNames=[...artists.values()].sort((a,b)=>b.plays-a.plays||b.count-a.count||a.name.localeCompare(b.name)).map(a=>a.name);
- $('artistsGrid').innerHTML=artistNames.map((name,idx)=>{const cover=songs.find(s=>s.artist===name);const a=artists.get(name);return '<div class="artist-card" data-idx="'+idx+'"><img class="artist-avatar" src="'+art(cover)+'" alt=""><span class="artist-info"><b>'+esc(name)+'</b><span>'+a.count+' '+(a.count===1?'song':'songs')+' · '+a.plays+' plays</span></span><button class="artist-play" title="Play '+esc(name)+'" onclick="event.stopPropagation();playArtist('+idx+')">▶</button></div>'}).join('');
- $('artistsGrid').querySelectorAll('.artist-card').forEach(card=>card.onclick=()=>openArtistPage(Number(card.dataset.idx)));
-};
-
-card=function(song,i){return '<div class="card" onclick="toggleSong('+i+')"><img class="cover" src="'+art(song)+'"><div class="card-title">'+esc(song.name)+'</div><div class="card-sub">'+esc(song.artist)+'</div><button class="add-to-pl" title="Add to playlist" onclick="event.stopPropagation();openAddToPlaylist('+i+')">+</button><button class="play-overlay" title="Play or pause '+esc(song.name)+'" onclick="event.stopPropagation();toggleSong('+i+')">▶</button></div>'};
-
-function restorePlaylistActions(){document.querySelector('.playlist-page-actions').innerHTML='<button class="btn" id="playPlaylist" title="Play this playlist">▶ Play</button><button class="btn secondary" id="shufflePlaylist" title="Shuffle and play this playlist">↝ Shuffle</button>'}
-const _openSongList=openSongList;
-openSongList=function(list,title){_openSongList(list,title);restorePlaylistActions();$('playPlaylist').onclick=()=>playPlaylist(list,false);$('shufflePlaylist').onclick=()=>playPlaylist(list,true);$('shufflePlaylist').classList.toggle('active',false)};
-
-window.openArtistPage=function(idx){
- const name=artistNames[idx];if(!name)return;const as=songs.filter(s=>s.artist===name);if(!as.length)return;
- playbackList=as.slice();restorePlaylistActions();
- $('playlistPageTitle').textContent=name;
- $('playlistPageMeta').textContent=as.length+' '+(as.length===1?'song':'songs')+' · '+as.reduce((s,song)=>s+(song.plays||0),0)+' plays';
- $('playlistPageLabel').textContent='ARTIST';
- $('playlistPageCover').innerHTML=Array.from({length:4},(_,i)=>'<img src="'+art(as[i%as.length])+'" alt="">').join('');
- $('playlistPageList').innerHTML=as.map(song=>{const i=songs.indexOf(song),active=i===current;return '<button class="playlist-song'+(active?' active':'')+'" onclick="toggleSong('+i+')"><span class="playlist-song-number">'+(active?'•':String(i+1).padStart(2,'0'))+'</span><img src="'+art(song)+'" alt=""><span class="playlist-song-info"><b>'+esc(song.name)+'</b><span>'+esc(song.artist)+'</span></span><button class="song-add-pl" onclick="event.stopPropagation();openAddToPlaylist('+i+')" title="Add to playlist">+</button><span class="playlist-song-action" aria-hidden="true">'+(active&&!audio.paused?'❚❚':'▶')+'</span></button>'}).join('');
- $('playPlaylist').onclick=()=>playPlaylist(as,false);
- $('shufflePlaylist').onclick=()=>playPlaylist(as,true);
- document.querySelectorAll('.center>section:not(#playlistPage)').forEach(s=>s.style.display='none');
- $('playlistPage').classList.add('open');document.querySelector('.center').scrollTo({top:0,behavior:'auto'});
-};
-window.playArtist=function(idx){const name=artistNames[idx];if(!name)return;const as=songs.filter(s=>s.artist===name);if(as.length)playPlaylist(as,false)};
-
-window.openCustomPlaylistPage=function(plId){
- const pl=customPlaylists.find(p=>p.id===plId);if(!pl)return;const ps=playlistSongs(pl);
- playbackList=ps.slice();
- $('playlistPageTitle').textContent=pl.name;
- $('playlistPageMeta').textContent=ps.length+' '+(ps.length===1?'song':'songs')+' · Custom playlist';
- $('playlistPageLabel').textContent='YOUR PLAYLIST';
- $('playlistPageCover').innerHTML=ps.length?Array.from({length:4},(_,i)=>'<img src="'+art(ps[i%ps.length])+'" alt="">').join(''):'<div class="cover" style="background:linear-gradient(135deg,var(--accent),var(--accent-2));display:grid;place-items:center;opacity:.7"></div>';
- $('playlistPageList').innerHTML=ps.length?ps.map((song,idx)=>{const i=songs.indexOf(song),active=i===current;return '<button class="playlist-song'+(active?' active':'')+'" onclick="toggleSong('+i+')"><span class="playlist-song-number">'+(active?'•':String(idx+1).padStart(2,'0'))+'</span><img src="'+art(song)+'" alt=""><span class="playlist-song-info"><b>'+esc(song.name)+'</b><span>'+esc(song.artist)+'</span></span><button class="song-add-pl" onclick="event.stopPropagation();openAddToPlaylist('+i+')" title="Add to playlist">+</button><button class="remove-from-pl" onclick="event.stopPropagation();removeSongFromPL(\''+plId+'\','+idx+')" title="Remove from playlist">×</button><span class="playlist-song-action" aria-hidden="true">'+(active&&!audio.paused?'❚❚':'▶')+'</span></button>'}).join(''):'<div class="empty">This playlist is empty. Click \"Add songs\" to add music.</div>';
- document.querySelector('.playlist-page-actions').innerHTML='<button class="btn" id="playPlaylist" title="Play this playlist">▶ Play</button><button class="btn secondary" id="shufflePlaylist" title="Shuffle and play">↝ Shuffle</button><button class="btn secondary" id="addSongsToPL" title="Add songs to this playlist">+ Add songs</button><button class="btn secondary" id="renamePL" title="Rename playlist">✎ Rename</button><button class="btn danger" id="deletePL" title="Delete playlist">Delete</button>';
- $('playPlaylist').onclick=()=>{if(ps.length)playPlaylist(ps,false);else showToast('This playlist is empty')};
- $('shufflePlaylist').onclick=()=>{if(ps.length)playPlaylist(ps,true);else showToast('This playlist is empty')};
- $('addSongsToPL').onclick=()=>openAddSongsToPlaylist(plId);
- $('renamePL').onclick=()=>{const n=prompt('Rename playlist:',pl.name);if(n&&n.trim()){renamePlaylist(plId,n.trim());openCustomPlaylistPage(plId);showToast('Playlist renamed')}};
- $('deletePL').onclick=()=>{if(confirm('Delete \"'+pl.name+'\"? This cannot be undone.')){customPlaylists=customPlaylists.filter(p=>p.id!==plId);savePlaylists();renderPlaylists();showHome();showToast('Playlist deleted')}};
- document.querySelectorAll('.center>section:not(#playlistPage)').forEach(s=>s.style.display='none');
- $('playlistPage').classList.add('open');document.querySelector('.center').scrollTo({top:0,behavior:'auto'});
-};
-window.playCustomPlaylist=function(plId,shuf){const pl=customPlaylists.find(p=>p.id===plId);if(!pl)return;const ps=playlistSongs(pl);if(ps.length)playPlaylist(ps,shuf);else showToast('This playlist is empty')};
-window.removeSongFromPL=function(plId,idx){const pl=customPlaylists.find(p=>p.id===plId);if(!pl)return;pl.songs.splice(idx,1);savePlaylists();openCustomPlaylistPage(plId);showToast('Song removed from playlist')};
-
-let atpSongIndex=-1;
-window.openAddToPlaylist=function(songIndex){
- atpSongIndex=songIndex;const song=songs[songIndex];if(!song)return;const uid=songUid(song);
- const items=customPlaylists.map(pl=>{const inPl=pl.songs.includes(uid);return '<button class="atp-item" onclick="addToPlaylistFromModal(\''+pl.id+'\')"><span class="atp-name">'+esc(pl.name)+'</span><span class="atp-count">'+(inPl?'Already added':pl.songs.length+' songs')+'</span></button>'}).join('');
- $('atpList').innerHTML=(items||'<div class="empty">No playlists yet — create one below.</div>')+'<button class="atp-create" onclick="createPlaylistFromModal()"><svg class="ui-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Create new playlist</button>';
- $('addToPlaylistModal').classList.add('open');
-};
-window.addToPlaylistFromModal=function(plId){
- if(atpSongIndex<0)return;const song=songs[atpSongIndex];if(!song)return;const uid=songUid(song);
- const pl=customPlaylists.find(p=>p.id===plId);if(!pl)return;
- if(pl.songs.includes(uid)){showToast('Already in this playlist');return}
- pl.songs.push(uid);savePlaylists();renderPlaylists();showToast('Added to \"'+pl.name+'\"');$('addToPlaylistModal').classList.remove('open');
-};
-window.createPlaylistFromModal=function(){
- if(atpSongIndex<0)return;const name=prompt('Playlist name:');if(!name||!name.trim())return;
- const pl={id:'pl-'+Date.now()+'-'+Math.random().toString(36).slice(2),name:name.trim(),songs:[]};
- const song=songs[atpSongIndex];if(song)pl.songs.push(songUid(song));
- customPlaylists.push(pl);savePlaylists();renderPlaylists();showToast('Playlist created and song added');$('addToPlaylistModal').classList.remove('open');
-};
-$('closeAddToPlaylist').onclick=()=>$('addToPlaylistModal').classList.remove('open');
-
-let asplId=null;
-window.openAddSongsToPlaylist=function(plId){
- asplId=plId;const pl=customPlaylists.find(p=>p.id===plId);if(!pl)return;
- $('addSongsCount').textContent=pl.name;
- $('addSongsList').innerHTML=songs.map((song,i)=>{const inPl=pl.songs.includes(songUid(song));return '<button class="add-songs-item'+(inPl?' in-pl':'')+'" '+(inPl?'':'onclick="addSongFromAddModal('+i+')"')+'><img src="'+art(song)+'" alt=""><span class="asi-info"><b>'+esc(song.name)+'</b><span>'+esc(song.artist)+'</span></span><span class="asi-check">'+(inPl?'✓':'+')+'</span></button>'}).join('');
- $('addSongsModal').classList.add('open');
-};
-window.addSongFromAddModal=function(songIndex){
- if(!asplId)return;const song=songs[songIndex];if(!song)return;const pl=customPlaylists.find(p=>p.id===asplId);if(!pl)return;
- const uid=songUid(song);if(pl.songs.includes(uid))return;
- pl.songs.push(uid);savePlaylists();renderPlaylists();showToast('Song added to playlist');
- openAddSongsToPlaylist(asplId);
- if($('playlistPage').classList.contains('open'))openCustomPlaylistPage(asplId);
-};
-$('closeAddSongs').onclick=()=>$('addSongsModal').classList.remove('open');
-
-$('newPlaylist').onclick=()=>{const name=prompt('Playlist name:');if(!name||!name.trim())return;const pl={id:'pl-'+Date.now()+'-'+Math.random().toString(36).slice(2),name:name.trim(),songs:[]};customPlaylists.push(pl);savePlaylists();renderPlaylists();showToast('Playlist created');openCustomPlaylistPage(pl.id)};
-
-['addToPlaylistModal','addSongsModal'].forEach(id=>{const m=$(id);m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open')})});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){['addToPlaylistModal','addSongsModal'].forEach(id=>$(id).classList.remove('open'))}});
 })();
 </script>
 </body>
